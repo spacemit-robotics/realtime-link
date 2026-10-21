@@ -1,0 +1,13 @@
+schema_version: 1
+transport: udp
+port: 5005
+rate_mbps: 12
+control_enabled: true
+control_port: 8080
+module_port: 8888
+bindings:
+  air-link: {interface: "", netns: ""}
+  ground-link: {interface: "", netns: ""}
+# Replace topic and expected dimensions with the actual calibrated producer.
+camera: {driver: ros2_mpp, topic: /camera/left/mpp_frame_desc, stream: left, width: 1920, height: 1200, format: nv12, fps: 60}
+pipeline: {width: 640, height: 400, fps: 60, bitrate: 4000000, gop: 60, encoder_id: 0, decoder_id: 0}

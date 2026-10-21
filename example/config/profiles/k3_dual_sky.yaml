@@ -1,0 +1,12 @@
+schema_version: 1
+transport: udp
+port: 5005
+rate_mbps: 12
+control_port: 8080
+control_enabled: true
+module_port: 8888
+bindings:
+  air-link: {netns: /run/netns/fpv-air, interface: ""}
+  ground-link: {netns: /run/netns/fpv-ground, interface: ""}
+camera: {driver: mpp_uvc, format: mjpeg, width: 1280, height: 720, fps: 30, device_id: 0, stream: left}
+pipeline: {width: 640, height: 400, fps: 30, bitrate: 4000000, gop: 30, encoder_id: 0, decoder_id: 0, max_frames: 4, max_bytes: 33554432, max_age_ms: 150}

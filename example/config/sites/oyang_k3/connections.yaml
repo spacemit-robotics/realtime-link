@@ -1,0 +1,3 @@
+connections:
+  sky: {device: k3-air, device_ip: 192.168.144.101, module_ip: 192.168.144.10, connection_id: air-link}
+  ground: {device: k3-ground, device_ip: 192.168.144.110, module_ip: 192.168.144.66, connection_id: ground-link}

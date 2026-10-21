@@ -1,0 +1,15 @@
+schema_version: 1
+transport: udp
+port: 5005
+rate_mbps: 12
+control_port: 8080
+control_enabled: true
+module_port: 8888
+bindings:
+  air-link: {interface: "", netns: ""}
+  ground-link: {interface: "", netns: ""}
+camera: {driver: mpp_uvc, format: mjpeg, width: 4000, height: 1200, fps: 30, device_id: 0, stream: left}
+# The DECXIN stereo MJPEG reserves the first 176 columns of the left 2000-column
+# half for sensor metadata/black padding.  Crop that area before scaling so it is
+# not encoded as a black-and-white strip in the FPV image.
+pipeline: {width: 1920, height: 1080, fps: 30, bitrate: 6000000, gop: 30, roi_x: 176, roi_y: 0, roi_width: 1824, roi_height: 1200, encoder_id: 0, decoder_id: 0, max_frames: 4, max_bytes: 33554432, max_age_ms: 150}
