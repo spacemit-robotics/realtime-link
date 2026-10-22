@@ -57,6 +57,7 @@ struct SessionConfig {
     uint32_t packet_size_bytes = 1400;
     double rate_mbps = 12.0;
     Limits limits;
+    uint32_t channel = 0;       // Accepted video protocol channel (0 or 1).
 };
 
 class SkySession {

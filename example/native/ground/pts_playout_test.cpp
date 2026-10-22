@@ -6,7 +6,7 @@
 #include <vector>
 
 using namespace std::chrono_literals;  // NOLINT(build/namespaces)
-using Queue = fpv_example::PtsPlayout<std::shared_ptr<int>>;
+using Queue = video_transmission_example::PtsPlayout<std::shared_ptr<int>>;
 using Time = Queue::Time;
 
 void Check(bool value) {
@@ -33,7 +33,7 @@ int main() {
     Check(*queue.Pop(start + 366666us)->payload == 2);
 
     // Periodic 200 ms I-frame stalls, followed by fast catch-up P frames.
-    for (const auto config : {fpv_example::PlayoutConfig{250, 400, 16}, {300, 600, 16}}) {
+    for (const auto config : {video_transmission_example::PlayoutConfig{250, 400, 16}, {300, 600, 16}}) {
         Queue periodic(config);
         struct Arrival {
             uint64_t pts;
@@ -152,7 +152,7 @@ int main() {
     Check(*high_pts.Pop(start + 284ms)->payload == 2);
 
     for (const auto config :
-        {fpv_example::PlayoutConfig{0, 0, 16}, {250, 400, 0}, {250, 400, 121}, {0, 10001, 16}}) {
+        {video_transmission_example::PlayoutConfig{0, 0, 16}, {250, 400, 0}, {250, 400, 121}, {0, 10001, 16}}) {
         bool invalid = false;
         try {
             Queue bad(config);

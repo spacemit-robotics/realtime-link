@@ -8,7 +8,7 @@ namespace video_transmission::latency {
 // never a ground-local clock. Cross-host subtraction requires clock calibration.
 uint64_t NowUs();
 bool Enabled();
-// Set FPV_TRACE_PATH before starting the process. A run must use a new file.
+// Set VIDEO_TRANSMISSION_TRACE_PATH before starting the process. A run must use a new file.
 // value carries event-specific metadata (wire sequence, bytes, presentation flags).
 // note 是可选诊断文本，写入 CSV 第五列；字段内部用 ';' 分隔，不得含逗号、CR、
 // LF（写入前会被替换为 '_'，并截断到 192 字节）。该列只承载诊断信息，不参与

@@ -2,8 +2,8 @@
 set -euo pipefail
 
 script_dir=$(cd "$(dirname "$0")" && pwd)
-prefix=${FPV_PREFIX:-/root/fpv-sdk}
-desktop_user=${FPV_DESKTOP_USER:-bianbu}
+prefix=${VIDEO_TRANSMISSION_PREFIX:-/root/video_transmission-sdk}
+desktop_user=${VIDEO_TRANSMISSION_DESKTOP_USER:-bianbu}
 desktop_uid=$(id -u "$desktop_user")
 runtime_dir="/run/user/$desktop_uid"
 
@@ -15,14 +15,14 @@ if [[ ! -S "$runtime_dir/wayland-0" ]]; then
   echo "No Wayland desktop for $desktop_user at $runtime_dir/wayland-0" >&2
   exit 1
 fi
-if pgrep -x fpv_ground >/dev/null; then
-  echo "Stop the existing fpv_ground before starting the preview." >&2
+if pgrep -x video_transmission_ground >/dev/null; then
+  echo "Stop the existing video_transmission_ground before starting the preview." >&2
   exit 1
 fi
-source "$prefix/fpv_setup.bash"
+source "$prefix/video_transmission_setup.bash"
 export MPP_PLUGIN_DIR="$prefix/lib"
 
-preview_dir=$(mktemp -d /tmp/fpv-ground-preview.XXXXXX)
+preview_dir=$(mktemp -d /tmp/video_transmission-ground-preview.XXXXXX)
 chmod 755 "$preview_dir"
 fifo="$preview_dir/video.h265"
 mkfifo -m 644 "$fifo"
@@ -46,12 +46,12 @@ trap 'exit 143' TERM
 runuser -u "$desktop_user" -- env \
   XDG_RUNTIME_DIR="$runtime_dir" WAYLAND_DISPLAY=wayland-0 SDL_VIDEODRIVER=wayland \
   ffplay -hide_banner -loglevel warning -an -framedrop \
-  -window_title 'FPV Ground' -f hevc -i "$fifo" \
+  -window_title 'Video Transmission Ground' -f hevc -i "$fifo" \
   >"$preview_dir/ffplay.log" 2>&1 &
 viewer_pid=$!
 
-echo "Opening FPV preview on $desktop_user's local screen."
+echo "Opening video transmission preview on $desktop_user's local screen."
 echo "ffplay log: $preview_dir/ffplay.log"
-fpv_ground --config "$script_dir/ground.yaml" --preview-fifo "$fifo" &
+video_transmission_ground --config "$script_dir/ground.yaml" --preview-fifo "$fifo" &
 ground_pid=$!
 wait "$ground_pid"

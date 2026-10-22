@@ -1,11 +1,11 @@
-# FPV 分阶段延迟测量
+# 视频传输分阶段延迟测量
 
 返回 [示例说明](../README.md)。测量工具位于 [校时工具](../tools/clock_probe.py)
 和 [统计工具](../tools/summarize_latency.py)，以下源树命令均从仓库根目录执行。
 
 ## 边界和时钟
 
-启用 `FPV_TRACE_PATH=/绝对路径/新文件.csv` 后，SDK 记录 CSV；未设置时不写日志。
+启用 `VIDEO_TRANSMISSION_TRACE_PATH=/绝对路径/新文件.csv` 后，SDK 记录 CSV；未设置时不写日志。
 每次启动必须使用新文件。单次连续运行、单路视频以原始 UVC PTS 关联，UDP 协议不变。
 事件的 `mono_us` 是所在设备的 `CLOCK_MONOTONIC` 微秒，`pts_us` 是天空端源帧标识。
 **不能直接用两台设备的单调时钟相减。**
@@ -31,7 +31,7 @@
 
 ## GUI 测量路径
 
-可选程序 `fpv_ground_latency` 直接显示 SDK 的 NV12 硬件解码帧：
+可选程序 `video_transmission_ground_latency` 直接显示 SDK 的 NV12 硬件解码帧：
 
 ```
 UDP → SDK H.265 硬件解码 → 最新帧邮箱 → SDL/OpenGL ES → Wayland
@@ -57,14 +57,14 @@ K1 实测发现原始呈现时间戳会冻结或滞后（首轮 1,656 个反馈�
 ## 构建
 
 SDK 增加 latency.hpp / latency.cpp，现有公开帧结构和传输包格式不变。
-将 `components/video_transmission` 以 `FPV_BUILD_PIPELINE=ON` 构建安装。
+将 `components/video_transmission` 以 `VIDEO_TRANSMISSION_BUILD_PIPELINE=ON` 构建安装。
 地面端额外依赖 `libsdl2-dev libwayland-dev wayland-protocols`，配置原生应用时设置：
 
 ```bash
-cmake -S components/video_transmission/example -B /tmp/fpv-latency-build-app \
-  -DCMAKE_PREFIX_PATH=/root/fpv-latency-sdk \
-  -DCMAKE_INSTALL_PREFIX=/root/fpv-latency-sdk -DFPV_BUILD_LATENCY_VIEWER=ON
-cmake --build /tmp/fpv-latency-build-app --target fpv_ground_latency --parallel 2
+cmake -S components/video_transmission/example -B /tmp/video_transmission-latency-build-app \
+  -DCMAKE_PREFIX_PATH=/root/video_transmission-latency-sdk \
+  -DCMAKE_INSTALL_PREFIX=/root/video_transmission-latency-sdk -DVIDEO_TRANSMISSION_BUILD_LATENCY_VIEWER=ON
+cmake --build /tmp/video_transmission-latency-build-app --target video_transmission_ground_latency --parallel 2
 ```
 
 默认不构建此窗口，不给普通 sky/ground 程序增加 SDL 依赖。
@@ -73,13 +73,13 @@ cmake --build /tmp/fpv-latency-build-app --target fpv_ground_latency --parallel 
 
 ## 当前设备与运行目录
 
-- K3 天空端 `root@10.0.91.42`：独立测量 SDK `/root/fpv-latency-sdk`。
-- K1 地面端 `root@10.0.91.82`：桌面可访问 SDK `/home/bianbu/fpv-latency-sdk`。
-- K1 地面配置 `/home/bianbu/fpv-latency-config/ground.yaml`。
+- K3 天空端 `root@10.0.91.42`：独立测量 SDK `/root/video_transmission-latency-sdk`。
+- K1 地面端 `root@10.0.91.82`：桌面可访问 SDK `/home/bianbu/video_transmission-latency-sdk`。
+- K1 地面配置 `/home/bianbu/video_transmission-latency-config/ground.yaml`。
 - 原运行 SDK 和启动脚本保留，测量结果不会自动切换原来的 ffplay 预览路径。
-- 开始前关闭旧 FPV/ffplay，确认摄像头和解码设备没有其他持有者。
+- 开始前关闭旧视频传输进程和 ffplay，确认摄像头和解码设备没有其他持有者。
 - 在 K1 以桌面用户 bianbu 运行窗口，使用其 Wayland/DBus 会话。root 会话的图形门户曾超时。
-- `FPV_TRACE_PATH` 要可写且不存在；进程正常退出后读取 CSV。
+- `VIDEO_TRANSMISSION_TRACE_PATH` 要可写且不存在；进程正常退出后读取 CSV。
 
 两端构建后可按以下顺序重复采样（每次将 RUN 替换为新的目录名）：
 
@@ -94,30 +94,30 @@ python3 components/video_transmission/example/tools/clock_probe.py server \
 
 ```bash
 python3 components/video_transmission/example/tools/clock_probe.py client \
-  --host 10.0.91.42 --seconds 85 --out /home/bianbu/fpv-latency-results/RUN/clock.jsonl
+  --host 10.0.91.42 --seconds 85 --out /home/bianbu/video_transmission-latency-results/RUN/clock.jsonl
 ```
 
 3. K1 启动窗口（结果目录须先以 bianbu 身份创建）。
 
 ```bash
 runuser -u bianbu -- env \
-  LD_LIBRARY_PATH=/home/bianbu/fpv-latency-sdk/lib \
-  MPP_PLUGIN_DIR=/home/bianbu/fpv-latency-sdk/lib \
-  FPV_TRACE_PATH=/home/bianbu/fpv-latency-results/RUN/ground.csv \
+  LD_LIBRARY_PATH=/home/bianbu/video_transmission-latency-sdk/lib \
+  MPP_PLUGIN_DIR=/home/bianbu/video_transmission-latency-sdk/lib \
+  VIDEO_TRANSMISSION_TRACE_PATH=/home/bianbu/video_transmission-latency-results/RUN/ground.csv \
   XDG_RUNTIME_DIR=/run/user/1000 \
   DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus \
   WAYLAND_DISPLAY=wayland-0 SDL_VIDEODRIVER=wayland \
-  /home/bianbu/fpv-latency-sdk/bin/fpv_ground_latency \
-  --config /home/bianbu/fpv-latency-config/ground.yaml --seconds 75
+  /home/bianbu/video_transmission-latency-sdk/bin/video_transmission_ground_latency \
+  --config /home/bianbu/video_transmission-latency-config/ground.yaml --seconds 75
 ```
 
 4. K3 启动 60 秒天空端（结果目录须先创建）。
 
 ```bash
 timeout --signal=INT --kill-after=15s 60s env \
-  FPV_PREFIX=/root/fpv-latency-sdk \
-  FPV_TRACE_PATH=/root/fpv-latency-results/RUN/sky.csv \
-  /root/fpv-config/start-sky.sh
+  VIDEO_TRANSMISSION_PREFIX=/root/video_transmission-latency-sdk \
+  VIDEO_TRANSMISSION_TRACE_PATH=/root/video_transmission-latency-results/RUN/sky.csv \
+  /root/video_transmission-config/start-sky.sh
 ```
 
 5. 收集两端 CSV 和 clock.jsonl，运行统计。

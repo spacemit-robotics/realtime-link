@@ -18,7 +18,7 @@ class ControlSession {
 public:
     ControlSession();
     ~ControlSession();
-    bool Start(const FpvConfig&, std::function<ControlMessage(const ControlMessage&)> handler = {});
+    bool Start(const VideoTransmissionConfig&, std::function<ControlMessage(const ControlMessage&)> handler = {});
     std::future<ControlReply> SendControl(
         ControlMessage, std::chrono::milliseconds timeout = std::chrono::milliseconds(1000));
     void Stop();
@@ -28,7 +28,7 @@ private:
     std::unique_ptr<Impl> impl_;
 };
 // Explicit module management call; credentials are supplied by the caller and never logged.
-ControlReply ExecuteModuleAt(const FpvConfig&, const std::string& command,
+ControlReply ExecuteModuleAt(const VideoTransmissionConfig&, const std::string& command,
     const std::string& user = {}, const std::string& password = {},
     std::chrono::milliseconds timeout = std::chrono::milliseconds(1000));
 }  // namespace video_transmission

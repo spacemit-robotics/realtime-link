@@ -6,7 +6,7 @@
 
 namespace video_transmission {
 
-// 显式 MJPEG -> NV12 转换，不参与 FpvSession 的输入模式选择。
+// 显式 MJPEG -> NV12 转换，不参与 VideoTransmission 的输入模式选择。
 // 输入必须为本进程 MPP VB 的单平面 MJPEG，owner 保持映射及 runtime；
 // 输出租约保持 VDEC 通道和 runtime，可超过 helper 的生命周期。
 class MjpegDecoder {

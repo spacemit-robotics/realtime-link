@@ -17,7 +17,7 @@
 #include <string>
 #include <thread>
 #include <utility>
-#include <video_transmission/session.hpp>
+#include <video_transmission/video_transmission.hpp>
 
 // Bounded asynchronous bridge from the encoded callback to a local HEVC player.
 class H265Preview {

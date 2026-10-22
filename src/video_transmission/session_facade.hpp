@@ -1,5 +1,5 @@
-#ifndef FPV_SESSION_HPP
-#define FPV_SESSION_HPP
+#ifndef VIDEO_TRANSMISSION_SESSION_HPP
+#define VIDEO_TRANSMISSION_SESSION_HPP
 
 #include <future>
 #include <video_transmission/config.hpp>
@@ -14,18 +14,18 @@ struct Result {
     bool ok() const { return code == StatusCode::Ok; }
 };
 using DecodedFrame = MppFrame;
-class FpvSession {
+class VideoTransmission {
 public:
-    FpvSession();
-    ~FpvSession();
-    FpvSession(const FpvSession&) = delete;
-    FpvSession& operator=(const FpvSession&) = delete;
+    VideoTransmission();
+    ~VideoTransmission();
+    VideoTransmission(const VideoTransmission&) = delete;
+    VideoTransmission& operator=(const VideoTransmission&) = delete;
     // Start 前注册。状态/视频回调在 SDK dispatch 线程执行。
     // 回调中提交或 SendControl 遇生命周期锁占用时立即返回未就绪，不能阻塞等待重试。
     void OnState(std::function<void(Result)>);
     void OnEncodedFrame(std::function<void(EncodedFrame)>);
     void OnVideoFrame(std::function<void(MppFrame)>);
-    Result Start(const FpvConfig&);
+    Result Start(const VideoTransmissionConfig&);
     // 仅 Sky/Raw：带 owner 的线性 NV12 或 BGRA；首帧确定编码输入格式，切换须重启。
     // NV12 支持 ROI/缩放；BGRA 要求完整同尺寸、width*4 stride，直接送 VENC，不做 V2D。
     // BGRA 宽度须为 16 的倍数；提交前生产者须完成 DMA 写入，owner 释放前不可修改像素。
@@ -52,4 +52,4 @@ private:
 };
 }  // namespace video_transmission
 
-#endif  // FPV_SESSION_HPP
+#endif  // VIDEO_TRANSMISSION_SESSION_HPP

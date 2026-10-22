@@ -9,7 +9,7 @@
 #include <mutex>
 #include <thread>
 #include <vector>
-#include <video_transmission/session.hpp>
+#include <video_transmission/video_transmission.hpp>
 
 #include "legacy_udp.hpp"
 

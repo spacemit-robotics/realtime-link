@@ -19,7 +19,7 @@ namespace {
 namespace fs = std::filesystem;
 using video_transmission::Binding;
 using video_transmission::Connection;
-using video_transmission::FpvConfig;
+using video_transmission::VideoTransmissionConfig;
 using video_transmission::InputMode;
 using video_transmission::Role;
 using video_transmission::Transport;
@@ -54,13 +54,10 @@ void Read(const YAML::Node& node, const char* key, Type& value) {
 }
 
 std::string ResolvePath(const fs::path& base, const std::string& value) {
-    if (value.starts_with("package://")) {
-        throw std::invalid_argument("package:// must be resolved by ROS adapter");
-    }
     return (base / fs::path(value)).lexically_normal().string();
 }
 
-void ReadInputMode(const YAML::Node& node, FpvConfig& config, std::string_view context) {
+void ReadInputMode(const YAML::Node& node, VideoTransmissionConfig& config, std::string_view context) {
     if (!node) {
         return;
     }
@@ -84,13 +81,13 @@ Connection ReadConnection(const YAML::Node& node) {
     return connection;
 }
 
-void ReadConnections(const YAML::Node& node, FpvConfig& config) {
+void ReadConnections(const YAML::Node& node, VideoTransmissionConfig& config) {
     CheckKeys(node, {"sky", "ground"}, "connections");
     config.connections.sky = ReadConnection(node["sky"]);
     config.connections.ground = ReadConnection(node["ground"]);
 }
 
-void ReadBindings(const YAML::Node& node, FpvConfig& config, const fs::path& base) {
+void ReadBindings(const YAML::Node& node, VideoTransmissionConfig& config, const fs::path& base) {
     if (!node || !node.IsMap()) {
         throw std::invalid_argument("bindings: expected map");
     }
@@ -118,14 +115,13 @@ void ReadCapture(const YAML::Node& node, CaptureConfig& capture, std::string_vie
         return;
     }
     CheckKeys(node,
-        {"driver", "device", "format", "stream", "topic", "width", "height", "fps", "depth",
+        {"driver", "device", "format", "stream", "width", "height", "fps", "depth",
             "device_id", "channel_id", "channel"},
         context);
     Read(node, "driver", capture.driver);
     Read(node, "device", capture.device);
     Read(node, "format", capture.format);
     Read(node, "stream", capture.stream);
-    Read(node, "topic", capture.topic);
     Read(node, "width", capture.width);
     Read(node, "height", capture.height);
     Read(node, "fps", capture.fps);
@@ -135,7 +131,7 @@ void ReadCapture(const YAML::Node& node, CaptureConfig& capture, std::string_vie
     Read(node, "channel", capture.channel);
 }
 
-void ReadPipeline(const YAML::Node& node, FpvConfig& config) {
+void ReadPipeline(const YAML::Node& node, VideoTransmissionConfig& config) {
     if (!node) {
         return;
     }
@@ -162,7 +158,7 @@ void ReadPipeline(const YAML::Node& node, FpvConfig& config) {
 #undef READ_PIPELINE_FIELD
 }
 
-void ReadSessionFields(const YAML::Node& node, FpvConfig& config) {
+void ReadSessionFields(const YAML::Node& node, VideoTransmissionConfig& config) {
     const auto transport = node["transport"];
     if (transport) {
         const auto value = transport.as<std::string>();
@@ -317,10 +313,8 @@ void ValidateExampleConfig(const ExampleConfig& config) {
             capture.channel_id >= kMaxViChannelCount)) {
         throw std::invalid_argument("invalid mpp_vi format or device/channel ID");
     }
-    if ((capture.driver == "ros2_mpp" || capture.driver == "ros2_image" ||
-            capture.driver == "ros2_compressed") &&
-        capture.topic.empty()) {
-        throw std::invalid_argument("ROS capture driver requires topic");
+    if (capture.driver != "mpp_uvc" && capture.driver != "mpp_vi") {
+        throw std::invalid_argument("capture driver must be mpp_uvc or mpp_vi");
     }
     if ((!pipeline.roi_width && (pipeline.roi_x || pipeline.roi_y)) ||
         (pipeline.roi_width == 0) != (pipeline.roi_height == 0) || pipeline.roi_x > capture.width ||
@@ -345,7 +339,7 @@ std::string DescribeExampleConfig(const ExampleConfig& config) {
                 << " capture_channel=" << config.capture.channel
                 << " device_id=" << config.capture.device_id
                 << " channel_id=" << config.capture.channel_id << " depth=" << config.capture.depth
-                << " stream=" << config.capture.stream << " topic=" << config.capture.topic
+                << " stream=" << config.capture.stream
                 << " output_kind="
                 << (config.session.pipeline.decoded_output ? "decoded_callback"
                                                             : "encoded_callback");

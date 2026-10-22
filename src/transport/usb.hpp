@@ -17,6 +17,7 @@ public:
     bool Active() const { return running_; }
 
 private:
+    void CloseEndpoints();
     bool Transfer(int fd, void* data, size_t size, bool write, int timeout_ms);
     bool Command(uint32_t tag);
     void Controls();

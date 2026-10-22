@@ -6,8 +6,8 @@
 #include <string>
 #include <thread>
 #include <utility>
-#include <video_transmission/fpv_session.hpp>
-#include <video_transmission/version.hpp>
+#include <video_transmission/video_transmission.hpp>
+#include <video_transmission/video_transmission.hpp>
 
 #include "../../adapters/camera_adapter.hpp"
 #include "../../adapters/example_config.hpp"
@@ -21,12 +21,12 @@ int main(int argc, char** argv) {
     try {
         if ((argc != 3 && argc != 5) || std::string(argv[1]) != "--config" ||
             (argc == 5 && std::string(argv[3]) != "--control-port")) {
-            std::cerr << "usage: fpv_sky --config path.yaml [--control-port port]\n";
+            std::cerr << "usage: video_transmission_sky --config path.yaml [--control-port port]\n";
             return 2;
         }
         namespace example = video_transmission::example;
         using video_transmission::ControlMessage;
-        using video_transmission::FpvSession;
+        using video_transmission::VideoTransmission;
         using video_transmission::InputMode;
         using video_transmission::RequireRole;
         using video_transmission::Result;
@@ -47,9 +47,9 @@ int main(int argc, char** argv) {
         std::cout << "build " << video_transmission::BuildInfo() << std::endl;
         // 本例是相机生产者；外部 H.265 生产者应调用 SubmitEncodedFrame。
         if (config.session.input_mode != InputMode::Raw)
-            throw std::invalid_argument("fpv_sky camera example requires input_mode=raw");
+            throw std::invalid_argument("video_transmission_sky camera example requires input_mode=raw");
         example::CameraAdapter camera(config);
-        FpvSession session;
+        VideoTransmission session;
         session.OnState([](const Result& result) {
             std::cerr << "generation=" << result.generation << " " << result.message << '\n';
         });

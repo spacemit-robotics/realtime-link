@@ -1,7 +1,7 @@
 #ifndef EXAMPLE_ADAPTERS_MJPEG_DECODER_HPP  // NOLINT(build/header_guard)
 #define EXAMPLE_ADAPTERS_MJPEG_DECODER_HPP  // NOLINT(build/header_guard)
 
-#include <video_transmission/mjpeg_decoder.hpp>
+#include <video_transmission/video_transmission.hpp>
 
 namespace video_transmission::example {
 

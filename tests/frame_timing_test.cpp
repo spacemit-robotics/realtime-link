@@ -14,7 +14,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include <video_transmission/session.hpp>
 
 using namespace video_transmission;  // NOLINT(build/namespaces)
 using namespace std::chrono_literals;  // NOLINT(build/namespaces)

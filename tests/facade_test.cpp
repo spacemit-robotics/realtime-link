@@ -7,7 +7,7 @@
 #include <condition_variable>
 #include <filesystem>  // NOLINT(build/c++17)
 #include <thread>
-#include <video_transmission/fpv_session.hpp>
+#include <video_transmission/video_transmission.hpp>
 using namespace video_transmission;  // NOLINT(build/namespaces)
 int main(int argc, char** argv) {
     assert(argc == 2);
@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     getsockname(probe, (sockaddr*)&a, &len);
     config.link.port = ntohs(a.sin_port);
     close(probe);
-    FpvSession ground;
+    VideoTransmission ground;
     std::mutex mutex;
     std::condition_variable cv;
     size_t received = 0;
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
     }
     assert(weak.expired() && releases == 1);
     // 地端不校验编码器尺寸；无效队列预算应返回失败，并允许安全停止。
-    FpvSession failed;
+    VideoTransmission failed;
     auto bad = config;
     bad.pipeline.max_frames = 0;
     assert(!failed.Start(bad).ok());

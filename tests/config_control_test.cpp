@@ -6,8 +6,8 @@
 #include <filesystem>  // NOLINT(build/c++17)
 #include <fstream>
 #include <thread>
-#include <video_transmission/config.hpp>
-#include <video_transmission/control.hpp>
+#include <video_transmission/video_transmission.hpp>
+#include <video_transmission/video_transmission.hpp>
 using namespace video_transmission;  // NOLINT(build/namespaces)
 uint16_t Port() {
     int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
     }
     assert(rejected);
     auto folder =
-        std::filesystem::temp_directory_path() / ("fpv-config-test-" + std::to_string(getpid()));
+        std::filesystem::temp_directory_path() / ("video_transmission-config-test-" + std::to_string(getpid()));
     std::filesystem::create_directory(folder);
     {
         std::ofstream f(folder / "bad.yaml");

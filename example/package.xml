@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>fpv_video_example</name>
+  <name>video_transmission_examples</name>
   <version>0.1.0</version>
-  <description>FPV 原生调用示例</description>
+  <description>视频传输原生调用示例</description>
   <maintainer email="maintainer@example.com">SpacemiT</maintainer>
   <license>Apache-2.0</license>
-  <depend>components/video_transmission</depend>
+  <depend>components/realtime-link</depend>
   <system_depend>libyaml-cpp-dev</system_depend>
   <export><build_type>cmake</build_type></export>
 </package>

@@ -27,7 +27,7 @@ struct PipelineConfig {
     // 0 <= min_qp <= max_qp <= 51，max_qp > 0（MPP 将 0/0 视为不设置）。
     uint32_t min_qp = 10, max_qp = 48;
 };
-struct FpvConfig {
+struct VideoTransmissionConfig {
     Role role = Role::Sky;
     InputMode input_mode = InputMode::Raw;
     uint32_t channel = 0;  // 单个会话绑定的协议通道（0 或 1）。
@@ -40,11 +40,11 @@ struct FpvConfig {
     uint16_t control_port = 8080, module_port = 8888;
 };
 // Throws invalid_argument with context. File references are resolved at their declaring file.
-FpvConfig LoadConfig(const std::string& path);
-void ValidateConfig(const FpvConfig&);
-SessionConfig ResolveLink(const FpvConfig&);
-void RequireRole(const FpvConfig&, Role);
-std::string DescribeConfig(const FpvConfig&);
+VideoTransmissionConfig LoadConfig(const std::string& path);
+void ValidateConfig(const VideoTransmissionConfig&);
+SessionConfig ResolveLink(const VideoTransmissionConfig&);
+void RequireRole(const VideoTransmissionConfig&, Role);
+std::string DescribeConfig(const VideoTransmissionConfig&);
 }  // namespace video_transmission
 
 #endif  // CONFIG_HPP

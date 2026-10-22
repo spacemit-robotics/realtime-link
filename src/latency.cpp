@@ -12,11 +12,11 @@ struct Writer {
     FILE* file = nullptr;
     char buffer[65536];
     Writer() {
-        const char* path = std::getenv("FPV_TRACE_PATH");
+        const char* path = std::getenv("VIDEO_TRANSMISSION_TRACE_PATH");
         if (path && *path) {
             file = std::fopen(path, "wx");
             if (!file) {
-                std::perror("FPV_TRACE_PATH");
+                std::perror("VIDEO_TRANSMISSION_TRACE_PATH");
                 std::abort();
             }
             std::setvbuf(file, buffer, _IOFBF, sizeof(buffer));

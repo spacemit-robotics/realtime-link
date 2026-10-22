@@ -104,7 +104,7 @@ struct ControlSession::Impl {
         Clock::time_point deadline;
         std::promise<ControlReply> reply;
     };
-    FpvConfig config;
+    VideoTransmissionConfig config;
     SessionConfig link;
     std::atomic<bool> run{false};
     int listener = -1;
@@ -192,7 +192,7 @@ struct ControlSession::Impl {
 ControlSession::ControlSession() : impl_(new Impl) {}
 ControlSession::~ControlSession() { Stop(); }
 bool ControlSession::Start(
-    const FpvConfig& c, std::function<ControlMessage(const ControlMessage&)> handler) {
+    const VideoTransmissionConfig& c, std::function<ControlMessage(const ControlMessage&)> handler) {
     auto& s = *impl_;
     if (s.run) return false;
     s.config = c;
@@ -241,7 +241,7 @@ void ControlSession::Stop() {
     for (auto& r : s.queue) r.reply.set_value({ControlStatus::Cancelled, {}});
     s.queue.clear();
 }
-ControlReply ExecuteModuleAt(const FpvConfig& c, const std::string& cmd, const std::string& user,
+ControlReply ExecuteModuleAt(const VideoTransmissionConfig& c, const std::string& cmd, const std::string& user,
     const std::string& password, std::chrono::milliseconds timeout) {
     if (cmd.empty() || cmd.size() > 1024 || cmd.find_first_of("\r\n") != std::string::npos ||
         user.find_first_of("\r\n,") != std::string::npos ||

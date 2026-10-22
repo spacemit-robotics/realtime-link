@@ -118,7 +118,7 @@ void LogMjpeg(int result, const char* operation) noexcept {
 class DecoderLock {
 public:
     explicit DecoderLock(int channel) {
-        const auto path = "/tmp/hub-fpv-vdec-" + std::to_string(channel) + ".lock";
+        const auto path = "/tmp/hub-video_transmission-vdec-" + std::to_string(channel) + ".lock";
         fd_ = open(path.c_str(), O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW, 0600);
         if (fd_ < 0) CheckMjpeg(-errno, "open VDEC lock");
         if (flock(fd_, LOCK_EX | LOCK_NB)) {

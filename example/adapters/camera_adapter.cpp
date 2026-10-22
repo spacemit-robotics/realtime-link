@@ -15,10 +15,10 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <video_transmission/control.hpp>
-#include <video_transmission/latency.hpp>
-#include <video_transmission/mjpeg_decoder.hpp>
-#include <video_transmission/mpp_frame.hpp>
+#include <video_transmission/video_transmission.hpp>
+#include <video_transmission/video_transmission.hpp>
+#include <video_transmission/video_transmission.hpp>
+#include <video_transmission/video_transmission.hpp>
 
 #include "example_config.hpp"
 

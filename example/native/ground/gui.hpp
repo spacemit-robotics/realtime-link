@@ -13,8 +13,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <video_transmission/latency.hpp>
-#include <video_transmission/mpp_frame.hpp>
+#include <video_transmission/video_transmission.hpp>
+#include <video_transmission/video_transmission.hpp>
 
 #include "pts_playout.hpp"
 
@@ -23,7 +23,7 @@ class GroundGui {
         SDL_Texture* texture = nullptr;
         ~Surface() { SDL_DestroyTexture(texture); }
     };
-    using Queue = fpv_example::PtsPlayout<std::shared_ptr<Surface>>;
+    using Queue = video_transmission_example::PtsPlayout<std::shared_ptr<Surface>>;
     using Clock = Queue::Clock;
     struct Pending {
         video_transmission::MppFrame frame;
@@ -31,11 +31,11 @@ class GroundGui {
     };
 
 public:
-    explicit GroundGui(fpv_example::PlayoutConfig config = {}, bool fullscreen = false)
+    explicit GroundGui(video_transmission_example::PlayoutConfig config = {}, bool fullscreen = false)
         : config_(config), queue_(config) {
         if (SDL_Init(SDL_INIT_VIDEO) < 0) throw std::runtime_error(SDL_GetError());
         window_ =
-            SDL_CreateWindow("FPV Ground", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 960, 600,
+            SDL_CreateWindow("Video Transmission Ground", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 960, 600,
                 SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE |
                     (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
         if (window_) renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
@@ -264,7 +264,7 @@ private:
         SDL_DestroyWindow(window_);
         SDL_Quit();
     }
-    fpv_example::PlayoutConfig config_;
+    video_transmission_example::PlayoutConfig config_;
     Queue queue_;
     std::mutex mutex_;
     std::deque<Pending> pending_;

@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <filesystem>  // NOLINT(build/c++17)
 #include <string>
-#include <video_transmission/config.hpp>
+#include <video_transmission/video_transmission.hpp>
 
 namespace video_transmission::example {
 
@@ -14,7 +14,6 @@ struct CaptureConfig {
     std::string device = "/dev/video0";
     std::string format = "mjpeg";
     std::string stream = "left";
-    std::string topic;
     uint32_t width = 1280;
     uint32_t height = 720;
     uint32_t fps = 30;
@@ -26,7 +25,7 @@ struct CaptureConfig {
 
 /** 将 SDK 会话参数与示例采集参数分别保存。 */
 struct ExampleConfig {
-    video_transmission::FpvConfig session;
+    video_transmission::VideoTransmissionConfig session;
     CaptureConfig capture;
 };
 

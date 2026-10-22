@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <video_transmission/config.hpp>
+#include <video_transmission/video_transmission.hpp>
 
 namespace {
 using namespace video_transmission;  // NOLINT(build/namespaces)
@@ -17,7 +17,7 @@ using namespace video_transmission;  // NOLINT(build/namespaces)
 struct ConfigFiles {
     std::filesystem::path folder;
     ConfigFiles() {
-        auto pattern = (std::filesystem::temp_directory_path() / "fpv-qp-XXXXXX").string();
+        auto pattern = (std::filesystem::temp_directory_path() / "video_transmission-qp-XXXXXX").string();
         const char* path = mkdtemp(pattern.data());
         if (!path) throw std::runtime_error("mkdtemp failed");
         folder = path;
@@ -35,7 +35,7 @@ struct ConfigFiles {
         std::error_code ec;
         std::filesystem::remove_all(folder, ec);
     }
-    FpvConfig Load(const std::string& fields) {
+    VideoTransmissionConfig Load(const std::string& fields) {
         std::ofstream profile(folder / "profile.yaml");
         profile << "schema_version: 1\ntransport: udp\nbindings: {air: {interface: ''}}\n"
                     "pipeline:\n  width: 640\n  height: 400\n"

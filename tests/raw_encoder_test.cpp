@@ -258,7 +258,7 @@ void SessionAdmission(const char* config_dir) {
     auto wrong_generation = bgra;
     wrong_generation.generation = 999;
     {
-        FpvSession session;
+        VideoTransmission session;
         assert(session.Start(config).ok());
         assert(runtime_refs == 0 && vb_refs == 0);  // No eager NV12 codec/pool.
         assert(session.SubmitFrame(wrong_generation) == SubmitResult::InvalidFrame);
@@ -274,7 +274,7 @@ void SessionAdmission(const char* config_dir) {
     {
         // A QueueFull frame must not choose the session's input pixel format.
         config.pipeline.max_bytes = nv12.info.stVFrame.u32TotalSize;
-        FpvSession session;
+        VideoTransmission session;
         assert(session.Start(config).ok());
         assert(session.SubmitFrame(bgra) == SubmitResult::QueueFull);
         assert(session.SubmitFrame(nv12) == SubmitResult::Accepted);

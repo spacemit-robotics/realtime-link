@@ -1,6 +1,6 @@
 # Reject malformed options before loading configuration, opening SDL, or starting a session.
 function(check_cli expected_code expected_text)
-    execute_process(COMMAND "${FPV_GROUND}" ${ARGN}
+    execute_process(COMMAND "${VIDEO_TRANSMISSION_GROUND}" ${ARGN}
         RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 3)
     if(NOT "${result}" STREQUAL "${expected_code}" OR
        NOT "${output}${error}" MATCHES "${expected_text}")

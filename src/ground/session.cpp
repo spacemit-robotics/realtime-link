@@ -102,6 +102,7 @@ struct GroundSession::Impl {
         Emit(Event::WaitingForKeyframe);
     }
     void Deliver(EncodedFrame f) {
+        if (f.channel != config.channel) return;
         latency::Mark("rx_complete", f.timestamp_us, f.frame_number);
         if (have_last[f.channel] && f.frame_number <= last[f.channel]) return;
         if (have_last[f.channel] && f.frame_number != last[f.channel] + 1 && !f.keyframe) {
@@ -205,6 +206,7 @@ struct GroundSession::Impl {
                 Emit(Event::InvalidPacket);
                 continue;
             }
+            if (h.channel != config.channel) continue;
             const size_t payload = static_cast<size_t>(n) - legacy_udp::kHeaderBytes;
             const size_t expected_count =
                 (h.frame_len + legacy_udp::kPayloadBytes - 1) / legacy_udp::kPayloadBytes;
@@ -340,7 +342,8 @@ bool GroundSession::Start(const SessionConfig& c) {
     auto& s = *impl_;
     std::lock_guard<std::mutex> lock(s.mutex);
     sockaddr_in address{};
-    if (s.running || c.packet_size_bytes != legacy_udp::kPacketBytes || !detail::ValidLimits(c.limits) ||
+    if (s.running || c.channel > 1 || c.packet_size_bytes != legacy_udp::kPacketBytes ||
+        !detail::ValidLimits(c.limits) ||
         (c.transport == Transport::Udp && !detail::ValidUdpTiming(c)) ||
         (c.transport == Transport::Udp && !detail::ParseAddress(c.address, c.port, &address)))
         return false;

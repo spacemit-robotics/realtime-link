@@ -6,11 +6,11 @@
 #include <filesystem>  // NOLINT(build/c++17)
 #include <mutex>
 #include <vector>
-#include <video_transmission/session.hpp>
+#include <video_transmission/video_transmission.hpp>
 using namespace video_transmission;  // NOLINT(build/namespaces)
 int main() {
     auto root =
-        std::filesystem::temp_directory_path() / ("fpv-usb-test-" + std::to_string(getpid()));
+        std::filesystem::temp_directory_path() / ("video_transmission-usb-test-" + std::to_string(getpid()));
     std::filesystem::create_directories(root / "sky");
     std::filesystem::create_directories(root / "ground");
     for (auto role : {"sky", "ground"})

@@ -1,5 +1,0 @@
-schema_version: 2
-deployment_profile: profiles/k3_stereo_ros2.yaml
-role: sky
-local_device: k3-air
-connections_file: connections.yaml

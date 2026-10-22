@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace fpv_example {
+namespace video_transmission_example {
 
 struct PlayoutConfig {
     uint32_t delay_ms = 0;
@@ -131,6 +131,6 @@ private:
     uint64_t base_pts_ = 0, last_pts_ = 0;
     Time base_time_{};
 };
-}  // namespace fpv_example
+}  // namespace video_transmission_example
 
 #endif  // PTS_PLAYOUT_HPP

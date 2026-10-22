@@ -19,22 +19,22 @@ if a.mode=='server':
   try: data,peer=sock.recvfrom(128)
   except socket.timeout: continue
   t2=now()
-  if peer[0]!=a.peer or len(data)!=12 or data[:4]!=b'FPVT': continue
+  if peer[0]!=a.peer or len(data)!=12 or data[:4]!=b'VTRC': continue
   t1=struct.unpack('!Q',data[4:])[0]
-  sock.sendto(struct.pack('!4sQQQ',b'FPVT',t1,t2,now()),peer)
+  sock.sendto(struct.pack('!4sQQQ',b'VTRC',t1,t2,now()),peer)
 else:
  if not a.out: p.error('--out required for client')
  sock.connect((a.host,a.port))
  with open(a.out,'x',buffering=1) as out:
   while time.monotonic()<until:
    t1=now()
-   sock.send(struct.pack('!4sQ',b'FPVT',t1))
+   sock.send(struct.pack('!4sQ',b'VTRC',t1))
    try: data=sock.recv(128)
    except (socket.timeout,ConnectionRefusedError): time.sleep(.05);continue
    t4=now()
    if len(data)!=28: continue
    magic,echo,t2,t3=struct.unpack('!4sQQQ',data)
-   if magic!=b'FPVT' or echo!=t1: continue
+   if magic!=b'VTRC' or echo!=t1: continue
    out.write(json.dumps(dict(t1=t1,t2=t2,t3=t3,t4=t4,
        ground_mid_us=(t1+t4)/2,offset_us=((t2-t1)+(t3-t4))/2,
        rtt_us=(t4-t1)-(t3-t2)))+'\n')

@@ -18,9 +18,9 @@
 #include <stdexcept>
 #include <thread>
 #include <utility>
-#include <video_transmission/fpv_session.hpp>
-#include <video_transmission/latency.hpp>
-#include <video_transmission/version.hpp>
+#include <video_transmission/video_transmission.hpp>
+#include <video_transmission/video_transmission.hpp>
+#include <video_transmission/video_transmission.hpp>
 
 #include "../../adapters/example_config.hpp"
 #include "presentation-time-client-protocol.h"
@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
     int result = 0;
     try {
         if (argc != 5 || std::string(argv[1]) != "--config" || std::string(argv[3]) != "--seconds")
-            throw std::runtime_error("usage: fpv_ground_latency --config ground.yaml --seconds 60");
+            throw std::runtime_error("usage: video_transmission_ground_latency --config ground.yaml --seconds 60");
         const int seconds = std::stoi(argv[4]);
         if (seconds <= 0 || seconds > 3600) throw std::runtime_error("seconds must be 1..3600");
         auto config = video_transmission::example::LoadExampleConfig(argv[2]);
@@ -181,7 +181,7 @@ int main(int argc, char** argv) {
         if (!config.session.pipeline.decoded_output)
             throw std::runtime_error("decoded_callback output required");
         SdlCheck(SDL_Init(SDL_INIT_VIDEO));
-        window = SDL_CreateWindow("FPV hardware decode latency", SDL_WINDOWPOS_CENTERED,
+        window = SDL_CreateWindow("Video transmission hardware decode latency", SDL_WINDOWPOS_CENTERED,
             SDL_WINDOWPOS_CENTERED, config.session.pipeline.width, config.session.pipeline.height,
             SDL_WINDOW_SHOWN);
         if (!window) throw std::runtime_error(SDL_GetError());
@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
         std::mutex mutex;
         video_transmission::MppFrame latest;
         // Session is destroyed before the callback's mailbox/mutex and renderer.
-        video_transmission::FpvSession session;
+        video_transmission::VideoTransmission session;
         session.OnState([](const auto& r) {
             std::cerr << "generation=" << r.generation << ' ' << r.message << '\n';
         });

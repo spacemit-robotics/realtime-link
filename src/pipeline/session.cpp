@@ -15,7 +15,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <thread>
-#include <video_transmission/fpv_session.hpp>
+#include <video_transmission/session_facade.hpp>
 #include <video_transmission/latency.hpp>
 
 #include "transport/frame_timing.hpp"
@@ -61,7 +61,7 @@ void ValidateRawFrame(const MppFrame& frame, const PipelineConfig& config) {
 struct Resource {
     int fd = -1;
     Resource(const std::string& kind, int id) {
-        auto path = "/tmp/hub-fpv-" + kind + "-" + std::to_string(id) + ".lock";
+        auto path = "/tmp/hub-video_transmission-" + kind + "-" + std::to_string(id) + ".lock";
         fd = open(path.c_str(), O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW, 0600);
         if (fd < 0 || flock(fd, LOCK_EX | LOCK_NB)) {
             if (fd >= 0) close(fd);
@@ -121,7 +121,12 @@ struct Decoder : std::enable_shared_from_this<Decoder> {
         VideoFrameInfo v{};
         if (VDEC_GetFrame(id, &v, 20)) return {};
         latency::Mark("decode_done", v.stVFrame.u64PTS);
-        return AdoptMppFrame(v, std::move(release), self);
+        auto frame = AdoptMppFrame(v, std::move(release), self);
+        // Validate before handing decoder output to callbacks/GUI. If the
+        // driver reports an invalid frame, frame destruction returns the VDEC
+        // lease before the exception escapes.
+        ValidateMppFrame(frame);
+        return frame;
     }
 };
 struct Pool : std::enable_shared_from_this<Pool> {
@@ -242,7 +247,7 @@ struct Encoder {
         const auto& v = input.info;
         auto& ci = v.stCommFrameInfo;
         if (ci.ePixelFormat != input_format)
-            throw std::invalid_argument("raw input format changed; restart the FPV session");
+            throw std::invalid_argument("raw input format changed; restart the VIDEO_TRANSMISSION session");
         if (input_format == MPP_PIXEL_FORMAT_BGRA) {
             // Backpressure is bounded; never overwrite a submitted source surface.
             if (in_flight.size() >= config.max_frames + 3U) {
@@ -363,10 +368,10 @@ std::future<Result> Ready(Result r) {
     return p.get_future();
 }
 }  // namespace
-struct FpvSession::Impl {
+struct VideoTransmission::Impl {
     std::mutex stop_mutex, life, queue_mutex, update_mutex;
     std::condition_variable wake;
-    FpvConfig config;
+    VideoTransmissionConfig config;
     std::atomic<bool> running{false}, stopping{false}, updating{false}, need_keyframe{false},
         need_reconnect{false}, need_external_idr{false};
     bool used = false;
@@ -704,45 +709,50 @@ struct FpvSession::Impl {
         receive_keyframe = output_keyframe = true;
     }
 };
-void FpvSession::OnCameraControl(std::function<ControlMessage(const ControlMessage&)> cb) {
+void VideoTransmission::OnCameraControl(std::function<ControlMessage(const ControlMessage&)> cb) {
     if (callback_session == impl_.get()) throw std::logic_error("register before Start");
     std::lock_guard l(impl_->life);
     if (impl_->used) throw std::logic_error("register before Start");
     impl_->camera_control = std::move(cb);
 }
-std::future<ControlReply> FpvSession::SendControl(ControlMessage m) {
+std::future<ControlReply> VideoTransmission::SendControl(ControlMessage m) {
     std::unique_lock l(impl_->life, std::defer_lock);
-    if (callback_session == impl_.get())
-        l.try_lock();
-    else
+    if (callback_session == impl_.get()) {
+        if (!l.try_lock()) {
+            std::promise<ControlReply> p;
+            p.set_value({ControlStatus::NotSent, {}});
+            return p.get_future();
+        }
+    } else {
         l.lock();
+    }
     if (l.owns_lock() && impl_->running && !impl_->stopping && !impl_->updating && impl_->control)
         return impl_->control->SendControl(std::move(m));
     std::promise<ControlReply> p;
     p.set_value({ControlStatus::NotSent, {}});
     return p.get_future();
 }
-FpvSession::FpvSession() : impl_(new Impl) {}
-FpvSession::~FpvSession() { Stop(); }
-void FpvSession::OnState(std::function<void(Result)> cb) {
+VideoTransmission::VideoTransmission() : impl_(new Impl) {}
+VideoTransmission::~VideoTransmission() { Stop(); }
+void VideoTransmission::OnState(std::function<void(Result)> cb) {
     if (callback_session == impl_.get()) throw std::logic_error("register before Start");
     std::lock_guard l(impl_->life);
     if (impl_->used) throw std::logic_error("register before Start");
     impl_->on_state = std::move(cb);
 }
-void FpvSession::OnEncodedFrame(std::function<void(EncodedFrame)> cb) {
+void VideoTransmission::OnEncodedFrame(std::function<void(EncodedFrame)> cb) {
     if (callback_session == impl_.get()) throw std::logic_error("register before Start");
     std::lock_guard l(impl_->life);
     if (impl_->used) throw std::logic_error("register before Start");
     impl_->on_encoded = std::move(cb);
 }
-void FpvSession::OnVideoFrame(std::function<void(DecodedFrame)> cb) {
+void VideoTransmission::OnVideoFrame(std::function<void(DecodedFrame)> cb) {
     if (callback_session == impl_.get()) throw std::logic_error("register before Start");
     std::lock_guard l(impl_->life);
     if (impl_->used) throw std::logic_error("register before Start");
     impl_->on_video = std::move(cb);
 }
-Result FpvSession::Start(const FpvConfig& c) {
+Result VideoTransmission::Start(const VideoTransmissionConfig& c) {
     auto& s = *impl_;
     if (callback_session == &s) return {StatusCode::NotReady, "Start from callback is prohibited"};
     std::lock_guard stop(s.stop_mutex);
@@ -775,14 +785,15 @@ Result FpvSession::Start(const FpvConfig& c) {
         return {StatusCode::Failed, e.what()};
     }
 }
-SubmitResult FpvSession::SubmitFrame(MppFrame f) {
+SubmitResult VideoTransmission::SubmitFrame(MppFrame f) {
     auto& s = *impl_;
     if (!s.running || s.stopping || s.updating) return SubmitResult::NotReady;
     std::unique_lock l(s.life, std::defer_lock);
-    if (callback_session == &s)
-        l.try_lock();
-    else
+    if (callback_session == &s) {
+        if (!l.try_lock()) return SubmitResult::NotReady;
+    } else {
         l.lock();
+    }
     if (!l.owns_lock() || !s.running || s.stopping || s.updating || !s.sky ||
         s.config.role != Role::Sky || s.config.input_mode != InputMode::Raw)
         return SubmitResult::NotReady;
@@ -805,14 +816,15 @@ SubmitResult FpvSession::SubmitFrame(MppFrame f) {
     s.wake.notify_all();
     return SubmitResult::Accepted;
 }
-SubmitResult FpvSession::SubmitEncodedFrame(EncodedFrame f) {
+SubmitResult VideoTransmission::SubmitEncodedFrame(EncodedFrame f) {
     auto& s = *impl_;
     if (!s.running || s.stopping || s.updating) return SubmitResult::NotReady;
     std::unique_lock l(s.life, std::defer_lock);
-    if (callback_session == &s)
-        l.try_lock();
-    else
+    if (callback_session == &s) {
+        if (!l.try_lock()) return SubmitResult::NotReady;
+    } else {
         l.lock();
+    }
     if (!l.owns_lock() || !s.running || s.stopping || s.updating || !s.sky ||
         s.config.role != Role::Sky || s.config.input_mode != InputMode::Encoded)
         return SubmitResult::NotReady;
@@ -824,7 +836,7 @@ SubmitResult FpvSession::SubmitEncodedFrame(EncodedFrame f) {
         s.RequestEncoderRecovery();
     return result;
 }
-std::future<Result> FpvSession::UpdateConnections(Connections c) {
+std::future<Result> VideoTransmission::UpdateConnections(Connections c) {
     auto& s = *impl_;
     if (callback_session == &s)
         return Ready({StatusCode::NotReady, "connection updates from callbacks are prohibited"});
@@ -884,7 +896,7 @@ std::future<Result> FpvSession::UpdateConnections(Connections c) {
     }
     return result;
 }
-void FpvSession::Stop() {
+void VideoTransmission::Stop() {
     auto& s = *impl_;
     if (callback_session == &s) throw std::logic_error("blocking Stop from callback is prohibited");
     std::lock_guard stop(s.stop_mutex);

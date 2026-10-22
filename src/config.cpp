@@ -26,8 +26,6 @@ void Read(const YAML::Node& n, const char* k, T& v) {
     if (n[k]) v = n[k].as<T>();
 }
 std::string Path(const fs::path& base, const std::string& path) {
-    if (path.starts_with("package://"))
-        throw std::invalid_argument("package:// must be resolved by ROS adapter");
     return (base / fs::path(path)).lexically_normal().string();
 }
 Connection Conn(const YAML::Node& n) {
@@ -44,7 +42,7 @@ bool IP(const std::string& s) {
     return inet_pton(AF_INET, s.c_str(), &a) == 1 && a.s_addr != INADDR_ANY;
 }
 }  // namespace
-FpvConfig LoadConfig(const std::string& path) {
+VideoTransmissionConfig LoadConfig(const std::string& path) {
     try {
         auto n = YAML::LoadFile(path);
         Keys(n,
@@ -54,7 +52,7 @@ FpvConfig LoadConfig(const std::string& path) {
         if (!n["schema_version"] || n["schema_version"].as<int>() != 2)
             throw std::invalid_argument(
                 "schema_version must be 2; migrate legacy config explicitly");
-        FpvConfig c;
+        VideoTransmissionConfig c;
         auto role = n["role"].as<std::string>();
         if (role != "sky" && role != "ground")
             throw std::invalid_argument("role must be sky or ground");
@@ -151,10 +149,10 @@ FpvConfig LoadConfig(const std::string& path) {
         throw std::invalid_argument(path + ": " + e.what());
     }
 }
-void RequireRole(const FpvConfig& c, Role role) {
+void RequireRole(const VideoTransmissionConfig& c, Role role) {
     if (c.role != role) throw std::invalid_argument("entry point role mismatch");
 }
-void ValidateConfig(const FpvConfig& c) {
+void ValidateConfig(const VideoTransmissionConfig& c) {
     if ((c.role != Role::Sky && c.role != Role::Ground) ||
         (c.input_mode != InputMode::Raw && c.input_mode != InputMode::Encoded) || c.channel > 1)
         throw std::invalid_argument("invalid role/input mode/channel");
@@ -205,7 +203,7 @@ void ValidateConfig(const FpvConfig& c) {
     if (c.role == Role::Ground && p.decoded_output && (p.decoder_id < 0 || p.decoder_id >= 64))
         throw std::invalid_argument("invalid decoder channel");
 }
-SessionConfig ResolveLink(const FpvConfig& c) {
+SessionConfig ResolveLink(const VideoTransmissionConfig& c) {
     ValidateConfig(c);
     auto l = c.link;
     auto& local = c.role == Role::Sky ? c.connections.sky : c.connections.ground;
@@ -214,11 +212,12 @@ SessionConfig ResolveLink(const FpvConfig& c) {
     l.interface = b.interface;
     l.netns = b.netns;
     l.ffs_root = b.ffs_root;
+    l.channel = c.channel;
     l.address = c.connections.ground.device_ip;
     if (c.role == Role::Ground) l.peer = c.connections.sky.device_ip;
     return l;
 }
-std::string DescribeConfig(const FpvConfig& c) {
+std::string DescribeConfig(const VideoTransmissionConfig& c) {
     auto l = ResolveLink(c);
     std::ostringstream s;
     s << "role=" << (c.role == Role::Sky ? "sky" : "ground") << " profile=" << c.profile_path

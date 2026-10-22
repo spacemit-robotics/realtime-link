@@ -138,7 +138,8 @@ SkySession::~SkySession() { StopSending(); }
 bool SkySession::Start(const SessionConfig& c) {
     auto& s = *impl_;
     std::lock_guard<std::mutex> lock(s.mutex);
-    if (s.running || c.packet_size_bytes != legacy_udp::kPacketBytes || !detail::ValidLimits(c.limits) ||
+    if (s.running || c.channel > 1 || c.packet_size_bytes != legacy_udp::kPacketBytes ||
+        !detail::ValidLimits(c.limits) ||
         !std::isfinite(c.rate_mbps) || !(c.rate_mbps > 0) ||
         (c.transport == Transport::Udp && !detail::ValidUdpTiming(c)) ||
         (c.transport == Transport::Udp && !detail::ParseAddress(c.address, c.port, &s.destination)))
@@ -166,6 +167,7 @@ SubmitResult SkySession::SubmitEncodedFrame(EncodedFrame f) {
     std::lock_guard<std::mutex> lock(s.mutex);
     if (!s.running) return SubmitResult::NotReady;
     if (!detail::ValidFrame(f, s.config.limits)) return SubmitResult::InvalidFrame;
+    if (f.channel != s.config.channel) return SubmitResult::InvalidFrame;
     if (s.wait_keyframe[f.channel] && !f.keyframe) return SubmitResult::NotReady;
     if (s.queue.size() >= s.config.limits.max_frames ||
         f.size > s.config.limits.max_bytes - s.queued_bytes) {
@@ -210,7 +212,7 @@ void SkySession::StopSending() {
     if (s.worker.joinable()) s.worker.join();
     if (!s.usb) {
         std::fprintf(stderr,
-            "[FPV_TX] complete=%llu queue_expired=%llu transfer_expired=%llu "
+            "[VIDEO_TRANSMISSION_TX] complete=%llu queue_expired=%llu transfer_expired=%llu "
             "send_errors=%llu\n",
             static_cast<unsigned long long>(s.sent_frames),
             static_cast<unsigned long long>(s.queue_expired),

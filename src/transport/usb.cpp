@@ -36,8 +36,13 @@ std::array<uint8_t, 1024> Notice(uint32_t channel, uint32_t len) {
 UsbLink::~UsbLink() {
     Cancel();
     if (control_thread_.joinable()) control_thread_.join();
-    for (int f : {video_, control_in_, control_out_, interrupt_})
-        if (f >= 0) close(f);
+    CloseEndpoints();
+}
+void UsbLink::CloseEndpoints() {
+    for (int* f : {&video_, &control_in_, &control_out_, &interrupt_}) {
+        if (*f >= 0) close(*f);
+        *f = -1;
+    }
 }
 void UsbLink::Cancel() { running_ = false; }
 bool UsbLink::Transfer(int fd, void* ptr, size_t n, bool writing, int timeout) {
@@ -60,6 +65,9 @@ bool UsbLink::Transfer(int fd, void* ptr, size_t n, bool writing, int timeout) {
     return n == 0;
 }
 bool UsbLink::Open(const SessionConfig& c, bool sky) {
+    if (running_) return false;
+    if (control_thread_.joinable()) control_thread_.join();
+    CloseEndpoints();
     limits_ = c.limits;
     auto ep = [&](int n) {
         return open(
@@ -69,10 +77,14 @@ bool UsbLink::Open(const SessionConfig& c, bool sky) {
     control_in_ = ep(3);
     control_out_ = ep(4);
     interrupt_ = ep(7);
-    if (video_ < 0 || control_in_ < 0 || control_out_ < 0 || interrupt_ < 0) return false;
+    if (video_ < 0 || control_in_ < 0 || control_out_ < 0 || interrupt_ < 0) {
+        CloseEndpoints();
+        return false;
+    }
     running_ = true;
     if (!Command(0xa00e)) {
         running_ = false;
+        CloseEndpoints();
         return false;
     }
     control_thread_ = std::thread([this] { Controls(); });
