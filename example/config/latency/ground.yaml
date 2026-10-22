@@ -1,0 +1,6 @@
+schema_version: 2
+deployment_profile: profile.yaml
+role: ground
+local_device: k3-ground
+connections_file: ../connections.yaml
+output: {kind: decoded_callback}

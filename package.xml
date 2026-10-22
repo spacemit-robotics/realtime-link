@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="3">
+<name>video_transmission</name>
+<version>0.1.0</version>
+<description>Video transmission communication core and optional MPP pipeline</description>
+<system_depend>libyaml-cpp-dev</system_depend>
+<depend>components/multimedia/mpp</depend>
+<export>
+<build_type>cmake</build_type>
+</export>
+</package>

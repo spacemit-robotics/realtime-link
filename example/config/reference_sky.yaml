@@ -1,0 +1,5 @@
+schema_version: 1
+role: sky
+transport: {backend: reference_udp, bind: 192.168.144.108, peer: 192.168.144.101, port: 5006}
+video: {width: 640, height: 400}
+limits: {max_frames: 8, max_bytes: 8388608, max_frame_bytes: 4194304, max_age_ms: 1000}
