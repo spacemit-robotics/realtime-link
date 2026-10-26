@@ -1,0 +1,19 @@
+# DECXIN stereo-specific profile: requires 4000x1200 MJPEG at 30 fps.
+# For other UVC cameras, probe supported modes and adapt camera/ROI settings
+# as described in example/docs/CAMERA_QUICKSTART.md.
+schema_version: 1
+transport: udp
+port: 5005
+rate_mbps: 12
+control_port: 18080
+control_enabled: true
+module_port: 8888
+bindings:
+  air-link: {interface: "", netns: ""}
+  ground-link: {interface: "", netns: ""}
+camera: {driver: mpp_uvc, format: mjpeg, width: 4000, height: 1200, fps: 30, device_id: 0, stream: left}
+# Stereo layout: left eye [0,2000), right eye [2000,4000). The first 176
+# columns of the left eye contain metadata/black padding. Keep [176,2000),
+# exactly 1824 columns of the left eye, before scaling; do not include the
+# right eye or the black-and-white metadata strip.
+pipeline: {width: 1920, height: 1080, fps: 30, bitrate: 6000000, gop: 30, roi_x: 176, roi_y: 0, roi_width: 1824, roi_height: 1200, encoder_id: 0, decoder_id: 0, max_frames: 4, max_bytes: 33554432, max_age_ms: 150}

@@ -1,0 +1,8 @@
+schema_version: 2
+deployment_profile: profiles/k3_dual_sky.yaml
+role: sky
+local_device: k3-main
+connections:
+  sky: {device: k3-main, device_ip: 192.168.144.108, module_ip: 192.168.144.10, connection_id: air-link}
+  ground: {device: k3-main, device_ip: 192.168.144.110, module_ip: 192.168.144.66, connection_id: ground-link}
+camera: {driver: mpp_uvc, device: /dev/video0}

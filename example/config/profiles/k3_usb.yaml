@@ -1,0 +1,10 @@
+schema_version: 1
+transport: usb
+control_enabled: true
+control_port: 8080
+module_port: 5051
+bindings:
+  air-link: {ffs_root: /dev/usb-ffs/customffs-air}
+  ground-link: {ffs_root: /dev/usb-ffs/customffs-ground}
+camera: {driver: mpp_uvc, format: mjpeg, width: 1280, height: 720, fps: 30}
+pipeline: {width: 640, height: 400, fps: 30, bitrate: 4000000, gop: 30}

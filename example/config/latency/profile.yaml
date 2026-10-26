@@ -1,0 +1,12 @@
+schema_version: 1
+transport: udp
+port: 5005
+rate_mbps: 12
+control_port: 8080
+control_enabled: true
+module_port: 8888
+bindings:
+  air-link: {interface: "", netns: ""}
+  ground-link: {interface: "", netns: ""}
+camera: {driver: mpp_uvc, format: mjpeg, width: 4000, height: 1200, fps: 30, device_id: 0, stream: left}
+pipeline: {width: 1920, height: 1080, fps: 30, bitrate: 8000000, gop: 30, roi_x: 0, roi_y: 0, roi_width: 2000, roi_height: 1200, encoder_id: 0, decoder_id: 1, max_frames: 4, max_bytes: 33554432, max_age_ms: 150}

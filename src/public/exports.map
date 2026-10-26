@@ -1,0 +1,14 @@
+VIDEO_TRANSMISSION_1 {
+    global:
+        vt_reference_udp_create;
+        vt_session_create;
+        vt_session_start;
+        vt_session_submit_encoded;
+        vt_session_submit_raw;
+        vt_session_drain;
+        vt_session_get_state;
+        vt_session_send_control;
+        vt_session_stop;
+        vt_session_destroy;
+    local: *;
+};
