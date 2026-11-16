@@ -1,0 +1,5 @@
+# Locally retained product protocol and control sources
+/private/
+# Local-only hardware and runtime regression tests
+/tests/mpp_runtime_test.cpp
+/tests/vi_lifecycle_test.cpp

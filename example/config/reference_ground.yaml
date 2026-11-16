@@ -1,0 +1,4 @@
+schema_version: 1
+role: ground
+transport: {backend: reference_udp, bind: 127.0.0.1, peer: 127.0.0.1, port: 5006}
+limits: {max_frames: 8, max_bytes: 8388608, max_frame_bytes: 4194304, max_age_ms: 1000}
