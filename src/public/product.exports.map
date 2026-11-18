@@ -1,0 +1,8 @@
+VIDEO_TRANSMISSION_PRODUCT_1 {
+    global:
+        vt_backend_plugin_create_v1;
+        vt_product_transport_create;
+        vt_product_control_create;
+        vt_product_module_at;
+    local: *;
+};

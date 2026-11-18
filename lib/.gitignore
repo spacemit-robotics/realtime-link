@@ -1,0 +1,3 @@
+# Track shared libraries and their versioned links.
+!*.so
+!*.so.*
